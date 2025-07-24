@@ -80,4 +80,11 @@ public class MainController {
     public String fetchTableData(String tableName) {
         return "item%1%카테고리1%상품A|2%카테고리2%상품B";
     }
+
+    public String signup(DataStruct data) {
+        Map<String, String> paramMap = dataStructToMap(data);
+        System.out.println("[회원가입 시도] 입력 데이터: " + paramMap);
+        boolean result = authService.signup(paramMap);
+        return "signupResult%" + (result ? "success" : "fail");
+    }
 }

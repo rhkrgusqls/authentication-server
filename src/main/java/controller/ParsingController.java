@@ -41,6 +41,9 @@ public class ParsingController {
             case "LOGIN":
                 return controller.login(data);
 
+            case "SIGNUP":
+                return controller.signup(data);
+
             case "SAVE_DATA":
                 return controller.saveData(data, senderId);
 
