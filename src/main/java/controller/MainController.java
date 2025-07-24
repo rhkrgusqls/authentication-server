@@ -26,11 +26,11 @@ public class MainController {
     }
 
     public String getProductDetails(DataStruct data, String token) {
-        return productService.getProductDetails(data, token);
+        return productService.getProductDetails(data.id[0], token);
     }
 
     public String login(DataStruct data) {
-        boolean result = authService.authenticate(data);
+        boolean result = authService.authenticate(data.id[0]);
         return "loginResult%" + (result ? "success" : "fail");
     }
 
