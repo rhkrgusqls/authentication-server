@@ -1,14 +1,13 @@
 package controller;
 
+import service.AuthService;
+import service.TestAuthService;
 import util.ParsingModule;
-
-import java.util.Map;
 
 public class ParsingController {
 
-    // 파싱 유틸에서 뽑아온 데이터 구조
+    // 파싱된 데이터를 담는 구조체
     public static class DataStruct {
-        // TODO: 데이터세트 지정
         public String[] id;
         public String[] password;
         public String[] name;
@@ -18,20 +17,28 @@ public class ParsingController {
         public String[] chatData;
     }
 
-    // controllerHandle 메서드: opcode별 분기하되 내용은 비워둠
     public static String controllerHandle(String input) {
         String opcode = ParsingModule.extractOpcode(input);
-        DataStruct data = ParsingModule.extractData(input);
+        ParsingController.DataStruct data = ParsingModule.extractData(input);
         String senderId = ParsingModule.extractSenderUserId(input);
 
+        MainController controller = new MainController();
+
         switch (opcode) {
+            case "FetchTable":
+                return controller.fetchTableData("item"); // or dynamic from input
+
             case "Login":
-                // TODO: 로그인 처리 로직 작성 예정
-                break;
+                return controller.login("Tokken Or ID+PASSWORD");
+
+            case "CreateToken":
+                return controller.createToken(senderId); // userId로 처리
+
+            case "GetPublicKey":
+                return controller.getPublicKey();
+
             default:
-                // TODO: 알 수 없는 opcode 처리
-                break;
+                return "error%UnknownOpcode";
         }
-        return null; // 실행 내용 없으므로 기본 null 반환
     }
 }
