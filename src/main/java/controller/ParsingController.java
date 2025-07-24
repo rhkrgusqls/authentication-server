@@ -1,12 +1,11 @@
 package controller;
-
-import service.AuthService;
-import service.TestAuthService;
 import util.ParsingModule;
+import controller.MainController;
+
+import java.util.Map;
 
 public class ParsingController {
 
-    // 파싱된 데이터를 담는 구조체
     public static class DataStruct {
         public String[] id;
         public String[] password;
@@ -19,22 +18,28 @@ public class ParsingController {
 
     public static String controllerHandle(String input) {
         String opcode = ParsingModule.extractOpcode(input);
-        ParsingController.DataStruct data = ParsingModule.extractData(input);
+        DataStruct data = ParsingModule.extractData(input);
         String senderId = ParsingModule.extractSenderUserId(input);
 
         MainController controller = new MainController();
 
         switch (opcode) {
-            case "FetchTable":
-                return controller.fetchTableData("item"); // or dynamic from input
+            case "GET_ACCESS_TOKEN":
+                return controller.getAccessToken(data);
 
-            case "Login":
-                return controller.login("Tokken Or ID+PASSWORD");
+            case "PRODUCT_SEARCH":
+                return controller.searchProducts(data, senderId);
 
-            case "CreateToken":
-                return controller.createToken(senderId); // userId로 처리
+            case "SearchData":
+                return controller.getProductDetails(data, senderId);
 
-            case "GetPublicKey":
+            case "LOGIN":
+                return controller.login(data);
+
+            case "SAVE_DATA":
+                return controller.saveData(data, senderId);
+
+            case "GET_PUBLIC_KEY":
                 return controller.getPublicKey();
 
             default:

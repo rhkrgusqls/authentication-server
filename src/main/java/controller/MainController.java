@@ -1,35 +1,53 @@
 package controller;
 
+import model.JWTModel;
 import service.AuthService;
+import service.ProductService;
 import service.TestAuthService;
-import model.*;
+import service.TokenService;
+import service.MarketDataService;
+import controller.ParsingController.DataStruct;
 
 public class MainController {
 
-    private final AuthService authService = new TestAuthService(); // 인증 서비스
-    private final JWTModel jwtModel = new JWTModel(); // JWT 서비스 (직접 구현 필요)
+    private final AuthService authService = new TestAuthService();
+    private final JWTModel jwtModel = new JWTModel();
+    private final TokenService tokenService = new TokenService();
+    private final ProductService productService = new ProductService();
+    private final MarketDataService marketDataService = new MarketDataService();
 
-    // 1. 테이블 데이터 가져오기
-    public String fetchTableData(String tableName) {
-        // 예시 응답
-        return "item%1%카테고리1%상품A|2%카테고리2%상품B";
+    public String getAccessToken(DataStruct data) {
+        // 임시 응답 처리 (예시)
+        return marketDataService.getAccessToken(data);
     }
 
-    // 2. 로그인 처리
-    public String login(String credentials) {
-        boolean result = authService.authenticate(credentials);
+    public String searchProducts(DataStruct data, String token) {
+        return productService.searchProducts(data, token);
+    }
+
+    public String getProductDetails(DataStruct data, String token) {
+        return productService.getProductDetails(data, token);
+    }
+
+    public String login(DataStruct data) {
+        boolean result = authService.authenticate(data);
         return "loginResult%" + (result ? "success" : "fail");
     }
 
-    // 3. 토큰 생성
+    public String saveData(DataStruct data, String token) {
+        return productService.saveData(data, token);
+    }
+
+    public String getPublicKey() {
+        return "publicKey%" + jwtModel.getPublicKeyString();
+    }
+
     public String createToken(String userId) {
         String token = jwtModel.generateToken(userId);
         return "token%" + token;
     }
 
-    // 4. 공개키 반환
-    public String getPublicKey() {
-        String publicKey = jwtModel.getPublicKeyString();
-        return "publicKey%" + publicKey;
+    public String fetchTableData(String tableName) {
+        return "item%1%카테고리1%상품A|2%카테고리2%상품B";
     }
 }
