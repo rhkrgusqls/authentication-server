@@ -12,9 +12,17 @@ public class MainController {
 
     private final AuthService authService = new TestAuthService();
     private final JWTModel jwtModel = new JWTModel();
-    private final TokenService tokenService = new TokenService();
-    private final ProductService productService = new ProductService();
-    private final MarketDataService marketDataService = new MarketDataService();
+    private final TokenService tokenService;
+    private final ProductService productService;
+    private final MarketDataService marketDataService;
+    private final repository.ProductRepository productRepository;
+
+    public MainController(TokenService tokenService, repository.ProductRepository productRepository) {
+        this.tokenService = tokenService;
+        this.productRepository = productRepository;
+        this.productService = new ProductService(tokenService, productRepository);
+        this.marketDataService = new MarketDataService(tokenService);
+    }
 
     public String getAccessToken(DataStruct data) {
         // 임시 응답 처리 (예시)
