@@ -1,4 +1,4 @@
-package module;
+package model;
 
 import java.io.BufferedWriter;
 import java.io.File;

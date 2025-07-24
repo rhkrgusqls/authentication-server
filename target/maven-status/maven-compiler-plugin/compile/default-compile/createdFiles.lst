@@ -1,7 +1,7 @@
 console/HTTPSConnect.class
 console/HTTPSConnect$1.class
 console/MainConsole.class
-module/LogModule.class
+model/LogModule.class
 controller/TestController.class
 main/Main.class
 console/TestConsole.class
