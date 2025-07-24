@@ -10,10 +10,9 @@ public class ParsingModule {
 
     // Opcode 추출
     public static String extractOpcode(String input) {
-        int start = input.indexOf('%');
-        int end = input.indexOf('%', start + 1);
-        if (start != -1 && end != -1) {
-            return input.substring(start + 1, end);
+        int percentIdx = input.indexOf('%');
+        if (percentIdx > 0) {
+            return input.substring(0, percentIdx);
         }
         return null;
     }
@@ -24,14 +23,14 @@ public class ParsingModule {
         Map<String, List<String>> tempMap = new HashMap<>();
 
         int firstPercent = input.indexOf('%');
-        int secondPercent = input.indexOf('%', firstPercent + 1);
         int lastPercent = input.lastIndexOf('%');
 
-        if (firstPercent == -1 || secondPercent == -1 || lastPercent == -1 || secondPercent >= lastPercent) {
+        if (firstPercent == -1 || lastPercent == -1 || firstPercent >= lastPercent) {
             return data;
         }
 
-        String dataSection = input.substring(secondPercent + 1, lastPercent);
+        String dataSection = input.substring(firstPercent + 1, lastPercent);
+        System.out.println("[DEBUG] dataSection: '" + dataSection + "'");
         String[] entries = dataSection.split("&");
 
         for (String entry : entries) {

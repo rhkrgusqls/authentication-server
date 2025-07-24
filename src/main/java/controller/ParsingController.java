@@ -18,10 +18,15 @@ public class ParsingController {
 
     public static String controllerHandle(String input) {
         String opcode = ParsingModule.extractOpcode(input);
+        System.out.println("[DEBUG] 추출된 opcode: '" + opcode + "'");
         DataStruct data = ParsingModule.extractData(input);
         String senderId = ParsingModule.extractSenderUserId(input);
 
-        MainController controller = new MainController();
+        // 실제 의존성 객체를 직접 생성 (임시)
+        service.AuthService authService = new service.TestAuthService();
+        service.TokenService tokenService = new service.TokenService();
+        repository.ProductRepository productRepository = null; // 실제 구현체로 교체 필요
+        controller.MainController controller = new controller.MainController(authService, tokenService, productRepository);
 
         switch (opcode) {
             case "GET_ACCESS_TOKEN":

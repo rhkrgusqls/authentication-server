@@ -2,6 +2,10 @@ package model;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Claims;
 
 import javax.crypto.SecretKey;
 import java.security.KeyPair;

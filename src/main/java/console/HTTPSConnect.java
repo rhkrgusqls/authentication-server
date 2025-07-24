@@ -36,7 +36,7 @@ public class HTTPSConnect {
                      p.addLast(sslCtx.newHandler(ch.alloc()));
                      p.addLast(new StringDecoder(StandardCharsets.UTF_8));
                      p.addLast(new StringEncoder(StandardCharsets.UTF_8));
-                     p.addLast(new TestConsole());
+                     p.addLast(new MainConsole());
                  }
              });
 
