@@ -10,7 +10,7 @@ public class ParsingController {
         public String[] id;
         public String[] password;
         public String[] name;
-        public String[] profileDir;
+        public String[] profile
         public String[] phoneNum;
         public String[] chatRoomNum;
         public String[] chatData;
