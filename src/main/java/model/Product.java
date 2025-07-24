@@ -1,9 +1,6 @@
 package model;
-
-
 //final
-
-public class product {
+public class Product {
 	
 	private int productID;
 	

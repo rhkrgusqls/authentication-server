@@ -1,5 +1,4 @@
 package model;
-
 //final
 public class serverKey {
 

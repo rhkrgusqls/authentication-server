@@ -1,6 +1,4 @@
 package model;
-
-
 public class UserDTO {
     private String userID;
     private String userPassword;
@@ -29,6 +27,8 @@ public class UserDTO {
     public void setUserPassword(String userPassword) {
         this.userPassword = userPassword;
     }
+
+    public UserDTO(String userID, String userPassword) {}
 
     public UserDTO(String userID, String userPassword, String userAddress) {
         this.userID = userID;

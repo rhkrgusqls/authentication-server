@@ -1,6 +1,4 @@
 package model;
-
-
 //final
 public class User {
 
@@ -78,6 +76,8 @@ public class User {
         this.userAddress = userAddress;
         this.cert = cert;
     }
+
+    public User() {}
     
     public User(String userID, String userPassword, String userAddress) {
         this.userID = userID;

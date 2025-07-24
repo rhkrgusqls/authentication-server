@@ -1,8 +1,11 @@
 package model;
-
 //final
-public class productDTO {
-	
+public class ProductDTO {
+
+
+
+
+	private int productId;
 	private String productName;
 	private int productStock;
 
@@ -22,8 +25,15 @@ public class productDTO {
 		this.productStock = productStock;
 	}
 
-	public productDTO(String productName, int productStock) {
-        this.productName = productName;
+	public int getProductId() { return productId; }
+
+	public void setProductId(int productId) { this.productId = productId; }
+
+	public ProductDTO() {}
+
+	public ProductDTO(int productId, String productName, int productStock) {
+        this.productId = productId;
+		this.productName = productName;
         this.productStock = productStock;
     }
 
