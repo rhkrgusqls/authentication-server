@@ -1,7 +1,7 @@
 package service;
 
-import com.example.market_api_server_netty.domain.Product;
-import com.example.market_api_server_netty.repository.ProductRepository;
+import domain.Product;
+import repository.ProductRepository;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
