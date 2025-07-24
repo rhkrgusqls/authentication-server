@@ -3,33 +3,13 @@ package model;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 
-import service.AuthService;
-
 import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 
-
-public class JWTModel implements AuthService {
-
-    // 로그 저장 리스트
-    private final List<String> validationLogs = new ArrayList<>();
-
-    // 로그 전체 조회
-    public List<String> getValidationLogs() {
-        return new ArrayList<>(validationLogs); // 외부 수정 방지용 복사본
-    }
-
-    // 로그 기록 유틸
-    private void log(String message) {
-        String timestamp = new Date().toString();
-        validationLogs.add("[" + timestamp + "] " + message);
-    }
+public class JWTModel {
 
     // 비밀키와 공개키 (RSA 방식 예시)
     private KeyPair keyPair;
@@ -120,30 +100,5 @@ public class JWTModel implements AuthService {
     // (추가) 토큰 유효시간 반환
     public long getTokenExpireMillis() {
         return tokenExpireMillis;
-    }
-
-    @Override
-    public boolean authenticate(String jwtToken) {
-        try {
-            readJWTToken(jwtToken);
-            log("Token validation success.");
-            return true;
-        } catch (ExpiredJwtException e) {
-            log("Token expired: " + e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            log("Unsupported JWT: " + e.getMessage());
-        } catch (MalformedJwtException e) {
-            log("Malformed JWT: " + e.getMessage());
-        } catch (SignatureException e) {
-            log("Invalid signature: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log("Illegal argument during validation: " + e.getMessage());
-        } catch (JwtException e) {
-            log("General JWT error: " + e.getMessage());
-        } catch (Exception e) {
-            log("Unknown error during JWT validation: " + e.getMessage());
-        }
-
-        return false;
     }
 }

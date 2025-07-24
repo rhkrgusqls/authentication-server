@@ -39,6 +39,7 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA와 하이버네이트 추가
     runtimeOnly 'com.h2database:h2'
+	implementation 'com.mysql:mysql-connector-j:8.0.33'
 }
 
 tasks.named('test') {
