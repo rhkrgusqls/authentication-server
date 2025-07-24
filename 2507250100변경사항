@@ -1,0 +1,160 @@
+### 1. MainController/ParsingController 구조 개선
+
+- 무엇을 했나?
+
+- MainController에서 AuthService, TokenService, ProductRepository 등 의존성을 생성자 주입 방식으로 변경
+
+- ParsingController에서 MainController를 올바르게 생성하도록 수정
+
+- 왜 바꿨나?
+
+- 객체를 직접 new로 생성하지 않고, 의존성 주입(DI) 방식으로 관리하면
+
+보안성, 유지보수성, 테스트 용이성이 크게 향상됨
+
+- 실제 서비스 환경에서 확장성과 협업에 유리
+
+---
+
+### 2. DataStruct → Map 변환 일관화
+
+- 무엇을 했나?
+
+- MainController의 모든 서비스 호출에서 DataStruct를 Map<String, String>으로 변환해서 서비스 계층에 넘기도록 통일
+
+- 왜 바꿨나?
+
+- 서비스 계층은 DB/비즈니스 로직만 신경쓰고,
+
+컨트롤러에서 데이터 변환만 담당하면 각 계층의 역할이 명확해짐
+
+- 회원가입, 상품검색 등 다른 기능도 같은 방식으로 쉽게 확장 가능
+
+---
+
+### 3. 명령어 파싱 로직 개선
+
+- 무엇을 했나?
+
+- ParsingModule.extractOpcode: 명령어(맨 앞 % 이전 문자열)를 정확히 추출하도록 로직 수정
+
+- ParsingModule.extractData: 첫 번째 % 다음부터 마지막 % 전까지 전체를 dataSection으로 추출하도록 수정
+
+- 왜 바꿨나?
+
+- 기존에는 명령어와 데이터가 제대로 분리되지 않아,
+
+"LOGIN" 명령어가 인식되지 않거나, id/password가 파싱되지 않는 문제가 있었음
+
+- 명령어와 데이터 파싱을 명확히 분리하여, 모든 명령어가 일관되게 동작하도록 개선
+
+---
+
+### 4. 서버 로그 및 디버깅 코드 추가
+
+- 무엇을 했나?
+
+- ParsingController.controllerHandle에서 추출된 opcode 값을 로그로 출력
+
+- extractData에서 dataSection 값을 로그로 출력
+
+- MainController.login에서 입력 데이터, 성공/실패 로그를 상세하게 출력
+
+- 왜 바꿨나?
+
+- 디버깅과 문제 원인 파악을 빠르고 정확하게 하기 위해
+
+- 실제 데이터 흐름과 파싱 결과를 실시간으로 확인할 수 있도록 함
+
+---
+
+### 5. Product/Repository 타입 일관성 정리
+
+- 무엇을 했나?
+
+- ProductRepository, ProductService 등에서 model.Product 대신 domain.Product만 사용하도록 타입 통일
+
+- ProductRepository에서 import model.; 구문 삭제, 반환 타입을 domain.Product로 명확히 지정
+
+- 왜 바꿨나?
+
+- JPA 엔티티와 DB 연동은 반드시 domain.Product로 통일해야
+
+타입 불일치 에러가 발생하지 않고,
+
+팀원 간 협업 시 혼동이 없음
+
+---
+
+### 6. JJWT 라이브러리 의존성 및 import 정리
+
+- 무엇을 했나?
+
+- build.gradle에 JJWT 관련 의존성(jjwt-api, jjwt-impl, jjwt-jackson) 추가 및 확인
+
+- JWTModel 등에서 Keys, SignatureAlgorithm 등 import문 명확히 추가
+
+- 왜 바꿨나?
+
+- JWT 토큰 생성/검증 기능을 위해 필수 라이브러리
+
+- 라이브러리와 import가 정확해야 컴파일/런타임 에러 없이 JWT 기능이 정상 동작
+
+---
+
+### 7. Netty 파이프라인 및 실제 비즈니스 로직 연결
+
+- 무엇을 했나?
+
+- Netty 파이프라인에서 TestConsole 대신 MainConsole을 사용하도록 변경
+
+- MainConsole에서 ParsingController.controllerHandle을 호출하여 실제 명령어 분기 및 응답 처리
+
+- 왜 바꿨나?
+
+- 임시/테스트용 코드(TestConsole)가 아닌,
+
+실제 비즈니스 로직이 동작하는 구조로 전환
+
+- 클라이언트 명령어가 실제 서비스 로직에 연결되도록 하기 위함
+
+---
+
+### 8. 클라이언트-서버 명령어 포맷 통일
+
+- 무엇을 했나?
+
+- 클라이언트에서 보내는 명령어 포맷을
+
+LOGIN%id$testuser&password$1234%
+
+형태로 통일하여 서버 파싱 로직과 일치시킴
+
+- 왜 바꿨나?
+
+- 서버 파싱 로직과 클라이언트 명령어 포맷이 다르면
+
+데이터가 제대로 전달되지 않으므로,
+
+양쪽 포맷을 일치시켜 데이터 전달/파싱이 정확하게 이루어지도록 함
+
+---
+
+## [결과]
+
+- 클라이언트가 LOGIN%id$testuser&password$1234% 명령어를 보내면
+
+서버에서 id, password가 정상적으로 파싱되고,
+
+로그인 성공/실패가 정상적으로 동작함
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+현재:
+
+- TestAuthService가 무조건 true 반환(=누구나 로그인 성공)
+
+- 추후:
+
+- DB에 저장된 사용자 정보(id, password)와
+
+클라이언트에서 입력한 값이 일치하는지 실제로 조회/검증하는 AuthService 구현체 필요
