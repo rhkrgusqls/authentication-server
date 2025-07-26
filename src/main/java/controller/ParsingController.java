@@ -26,7 +26,7 @@ public class ParsingController {
 
         switch (opcode) {
             case "LOGIN":
-                return controller.login(data);
+                return controller.login(data.id[0],data.password[0]);
 
             default:
                 return "error%UnknownOpcode";

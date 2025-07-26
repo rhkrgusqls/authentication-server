@@ -3,6 +3,7 @@ package service;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
+import org.bouncycastle.openssl.PEMKeyPair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,8 +28,65 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Map;
 import io.jsonwebtoken.*;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import java.security.Security;
+
 @Service
 public class TokenService implements AuthService {
+    static {
+        if (Security.getProvider("BC") == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
+
+    private static TokenService instance;
+
+    private TokenService() {
+        // private 생성자: 외부에서 직접 생성 불가
+        try {
+            this.keyACPair = loadKeyPair(AC_PUBLIC, AC_PRIVATE);
+            this.keyREPair = loadKeyPair(RE_PUBLIC, RE_PRIVATE);
+        } catch (Exception e) {
+            throw new RuntimeException("키 초기화 실패", e);
+        }
+    }
+
+    public static synchronized TokenService getInstance() {
+        if (instance == null) {
+            instance = new TokenService();
+        }
+        return instance;
+    }
+
+
+    public void initializeKeys() {
+        try {
+            // Access token 키 불러오기 또는 생성
+            try {
+                this.keyACPair = loadKeyPair(AC_PUBLIC, AC_PRIVATE);
+                if (!isKeyPairValid(this.keyACPair)) {
+                    this.keyACPair = generateAndSaveKeyPair(AC_PUBLIC, AC_PRIVATE);
+                }
+            } catch (Exception e) {
+                this.keyACPair = generateAndSaveKeyPair(AC_PUBLIC, AC_PRIVATE);
+            }
+
+            // Refresh token 키는 반드시 존재해야 하며, 유효하지 않으면 실패 처리
+            try {
+                this.keyREPair = loadKeyPair(RE_PUBLIC, RE_PRIVATE);
+                if (!isKeyPairValid(this.keyREPair)) {
+                    throw new RuntimeException("리프레시 키 쌍이 유효하지 않습니다.");
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("리프레시 키 불러오기 실패", e);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("키 초기화 실패", e);
+        }
+    }
+
+
 
     // application.properties에서 주입
     @Value("${jwt.expiration.access-token:3600000}")
@@ -37,10 +95,10 @@ public class TokenService implements AuthService {
     private KeyPair keyACPair;
     private KeyPair keyREPair;
 
-    private static final String AC_PRIVATE = "ac_private.pem";
-    private static final String AC_PUBLIC = "ac_public.pem";
-    private static final String RE_PRIVATE = "re_private.pem";
-    private static final String RE_PUBLIC = "re_public.pem";
+    private static final String AC_PRIVATE = "./ac_private.pem";
+    private static final String AC_PUBLIC = "./ac_public.pem";
+    private static final String RE_PRIVATE = "./re_private.pem";
+    private static final String RE_PUBLIC = "./re_public.pem";
 
     @PostConstruct
     public void init() {
@@ -49,16 +107,24 @@ public class TokenService implements AuthService {
             if (!isKeyPairValid(this.keyACPair)) {
                 this.keyACPair = generateAndSaveKeyPair(AC_PUBLIC, AC_PRIVATE);
             }
+        } catch (Exception e) {
+            try {
+                this.keyACPair = generateAndSaveKeyPair(AC_PUBLIC, AC_PRIVATE);
+            } catch (Exception ex) {
+                throw new RuntimeException("AC 키 생성 실패", ex);
+            }
+        }
 
+        try {
             this.keyREPair = loadKeyPair(RE_PUBLIC, RE_PRIVATE);
             if (!isKeyPairValid(this.keyREPair)) {
-                this.keyREPair = generateAndSaveKeyPair(RE_PUBLIC, RE_PRIVATE);
+                throw new RuntimeException("리프레시 키 쌍이 유효하지 않습니다.");
             }
-
         } catch (Exception e) {
-            throw new RuntimeException("키 초기화 실패", e);
+            throw new RuntimeException("리프레시 키 불러오기 실패", e);
         }
     }
+
 
     private boolean isKeyPairValid(KeyPair keyPair) {
         return keyPair != null && keyPair.getPrivate() != null && keyPair.getPublic() != null;
@@ -92,8 +158,12 @@ public class TokenService implements AuthService {
             }
         }
     }
-
     private KeyPair generateAndSaveKeyPair(String pubFile, String privFile) throws Exception {
+        // 리프레시 키 파일명이라면 무조건 예외 발생시켜서 생성 금지
+        if (pubFile.equals(RE_PUBLIC) || privFile.equals(RE_PRIVATE)) {
+            throw new UnsupportedOperationException("Refresh token key pair generation is forbidden.");
+        }
+
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(2048);
         KeyPair keyPair = keyGen.generateKeyPair();
@@ -111,20 +181,29 @@ public class TokenService implements AuthService {
         PublicKey publicKey;
         PrivateKey privateKey;
 
-        try (PEMParser pubReader = new PEMParser(new FileReader(pubFile));
-             PEMParser privReader = new PEMParser(new FileReader(privFile))) {
-
+        try (
+                PEMParser pubReader = new PEMParser(new FileReader(pubFile));
+                PEMParser privReader = new PEMParser(new FileReader(privFile))
+        ) {
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
 
-            SubjectPublicKeyInfo pubInfo = (SubjectPublicKeyInfo) pubReader.readObject();
+            Object pubObject = pubReader.readObject();
+            SubjectPublicKeyInfo pubInfo = (SubjectPublicKeyInfo) pubObject;
             publicKey = converter.getPublicKey(pubInfo);
 
-            PrivateKeyInfo privInfo = (PrivateKeyInfo) privReader.readObject();
-            privateKey = converter.getPrivateKey(privInfo);
+            Object privObject = privReader.readObject();
+            if (privObject instanceof PEMKeyPair) {
+                privateKey = converter.getKeyPair((PEMKeyPair) privObject).getPrivate();
+            } else if (privObject instanceof PrivateKeyInfo) {
+                privateKey = converter.getPrivateKey((PrivateKeyInfo) privObject);
+            } else {
+                throw new IllegalArgumentException("지원하지 않는 개인키 형식: " + privObject.getClass().getName());
+            }
         }
 
         return new KeyPair(publicKey, privateKey);
     }
+
 
     public String generateAccessToken(String username) {
         Date now = new Date();
@@ -160,6 +239,26 @@ public class TokenService implements AuthService {
             throw new RuntimeException("공개키 반환 실패", e);
         }
     }
+
+    public String extractUserIdFromRefreshTokenWithPEM(String refreshToken, String publicKeyPem) {
+        try (PEMParser pemParser = new PEMParser(new StringReader(publicKeyPem))) {
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+            SubjectPublicKeyInfo pubKeyInfo = (SubjectPublicKeyInfo) pemParser.readObject();
+            PublicKey publicKey = converter.getPublicKey(pubKeyInfo);
+
+            Claims claims = Jwts.parser()
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(refreshToken)
+                    .getPayload();
+
+            return claims.getSubject();
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("RefreshToken 해독 실패", e);
+        }
+    }
+
 
     @Override
     public boolean authenticate(String input) {
