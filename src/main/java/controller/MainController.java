@@ -34,8 +34,12 @@ public class MainController {
                 TokenService tokenService = TokenService.getInstance();
                 tokenService.initializeKeys();  // 수동 초기화 필수!
 
-                String userId = tokenService.extractUserIdFromRefreshToken(refreshToken);
-                String accessToken = tokenService.generateAccessToken(userId);
+                Map<String, String> info = tokenService.extractUserInfoFromRefreshToken(refreshToken);
+                String userId = info.get("userId");
+                String userName = info.get("username");
+
+                String accessToken = tokenService.generateAccessToken(userId, userName);
+
 
                 return "login%&accessToken$" + accessToken;
             }
@@ -57,13 +61,6 @@ public class MainController {
             return "signupResult%fail%error%Exception: " + e.getMessage();
         }
     }
-
-    // 간단히 refreshToken에서 userId를 추출하는 예시 함수 (실제 구현에 맞게 수정 필요)
-    private static String extractUserIdFromRefreshToken(String refreshToken) {
-        TokenService tokenService = TokenService.getInstance();
-        return tokenService.extractUserIdFromRefreshToken(refreshToken);
-    }
-
 
     public static String login(String id, String password) {
         Map<String, String> paramMap = new HashMap<>();

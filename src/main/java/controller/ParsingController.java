@@ -14,7 +14,9 @@ public class ParsingController {
         public String[] phoneNum;
         public String[] chatRoomNum;
         public String[] chatData;
+        public String[] refreshToken;  // ← 새로 추가
     }
+
 
     public static String controllerHandle(String input) {
         String opcode = ParsingModule.extractOpcode(input);
@@ -26,7 +28,11 @@ public class ParsingController {
 
         switch (opcode) {
             case "LOGIN":
-                return controller.login(data.id[0],data.password[0]);
+                if (data.refreshToken != null && data.refreshToken.length > 0) {
+                    return controller.login(data.refreshToken[0]);
+                } else {
+                    return controller.login(data.id[0], data.password[0]);
+                }
             case "SIGNUP":
                 return controller.signup(input);
             case "REQUESTKEY":

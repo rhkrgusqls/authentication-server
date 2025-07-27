@@ -26,6 +26,7 @@ import java.security.PrivateKey;
 import java.security.Security;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.HashMap;
 import java.util.Map;
 import io.jsonwebtoken.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -130,10 +131,23 @@ public class TokenService implements AuthService {
         return keyPair != null && keyPair.getPrivate() != null && keyPair.getPublic() != null;
     }
 
-    public String extractUserIdFromRefreshToken(String refreshToken) {
+    public Map<String, String> extractUserInfoFromRefreshToken(String refreshToken) {
         try {
-            Claims claims = Jwts.parser().verifyWith(keyREPair.getPublic()).build().parseSignedClaims(refreshToken).getPayload();
-            return claims.getSubject();
+            Claims claims = Jwts.parser()
+                    .verifyWith(keyREPair.getPublic())
+                    .build()
+                    .parseSignedClaims(refreshToken)
+                    .getPayload();
+
+            String userId = claims.getSubject(); // "sub" 값
+            String username = claims.get("username", String.class); // 커스텀 claim
+
+            Map<String, String> userInfo = new HashMap<>();
+            userInfo.put("userId", userId);
+            userInfo.put("username", username);
+
+            return userInfo;
+
         } catch (JwtException e) {
             throw new IllegalArgumentException("Invalid refresh token", e);
         }
@@ -203,14 +217,13 @@ public class TokenService implements AuthService {
 
         return new KeyPair(publicKey, privateKey);
     }
-
-
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String userId, String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpirationTime);
 
         return Jwts.builder()
-                .subject(username)
+                .setSubject(userId)                 // sub: username
+                .claim("username", username)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(keyACPair.getPrivate())

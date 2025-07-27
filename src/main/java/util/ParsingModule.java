@@ -48,6 +48,7 @@ public class ParsingModule {
         data.phoneNum = toArray(tempMap.get("phoneNum"));
         data.chatRoomNum = toArray(tempMap.get("chatRoomNum"));
         data.chatData = toArray(tempMap.get("chatData"));
+        data.refreshToken = toArray(tempMap.get("refreshToken"));
 
         return data;
     }
