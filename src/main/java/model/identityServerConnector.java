@@ -262,4 +262,72 @@ public class identityServerConnector {
             return null;
         }
     }
+    public String signup(String rawCommand) {
+        CompletableFuture<String> responseFuture = new CompletableFuture<>();
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        try {
+            SslContext sslCtx = buildSslContext(certPath);
+
+            Bootstrap bootstrap = new Bootstrap();
+            bootstrap.group(group)
+                    .channel(NioSocketChannel.class)
+                    .handler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel ch) {
+                            ChannelPipeline p = ch.pipeline();
+                            p.addLast(sslCtx.newHandler(ch.alloc(), serverHost, serverPort));
+                            p.addLast(new LineBasedFrameDecoder(8192));
+                            p.addLast(new StringDecoder(StandardCharsets.UTF_8));
+                            p.addLast(new StringEncoder(StandardCharsets.UTF_8));
+                            p.addLast(new SimpleChannelInboundHandler<String>() {
+                                private boolean completed = false;
+
+                                @Override
+                                protected void channelRead0(ChannelHandlerContext ctx, String msg) {
+                                    if (!completed) {
+                                        completed = true;
+                                        responseFuture.complete(msg);
+                                    }
+                                }
+
+                                @Override
+                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                                    if (!completed) {
+                                        completed = true;
+                                        responseFuture.completeExceptionally(cause);
+                                    }
+                                    ctx.close();
+                                }
+
+                                @Override
+                                public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                    if (!completed) {
+                                        completed = true;
+                                        responseFuture.complete(""); // 연결만 끊기고 응답이 없을 경우
+                                    }
+                                    super.channelInactive(ctx);
+                                }
+                            });
+                        }
+                    });
+
+            ChannelFuture future = bootstrap.connect(serverHost, serverPort).sync();
+
+            // 반드시 개행 문자 포함
+            future.channel().writeAndFlush(rawCommand + "\n");
+
+            String response = responseFuture.get();
+            System.out.println("[DEBUG] Received raw response: " + response);
+            return response;
+
+        } catch (Exception e) {
+            System.err.println("[ERROR] sendRawRequest failed");
+            e.printStackTrace();
+            return null;
+        } finally {
+            group.shutdownGracefully();
+        }
+    }
+
 }

@@ -9,7 +9,9 @@ import console.HTTPSConnect;
 @SpringBootApplication
 public class Main {
     public static void main(String[] args) throws Exception {
-        System.out.println(ParsingController.controllerHandle("LOGIN%&id$testuser&password$1234%"));
+        //System.out.println(ParsingController.controllerHandle("LOGIN%&id$testuser&password$1234%"));
+        //System.out.println(ParsingController.controllerHandle("SIGNUP%&id$testuser2&password$1234%"));
+        System.out.println(ParsingController.controllerHandle("REQUESTKEY%%"));
 
         /*
         int port = 2010; // 서버 포트

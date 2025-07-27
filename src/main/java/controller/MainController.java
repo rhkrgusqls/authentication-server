@@ -14,7 +14,7 @@ import java.util.Map;
 public class MainController {
 
     private static Map<String, String> dataStructToMap(DataStruct data) {
-        Map<String, String> map = new java.util.HashMap<>();
+        Map<String, String> map = new HashMap<>();
         if (data.id != null && data.id.length > 0) map.put("id", data.id[0]);
         if (data.password != null && data.password.length > 0) map.put("password", data.password[0]);
         // 필요시 추가
@@ -43,6 +43,18 @@ public class MainController {
         } catch (Exception e) {
             e.printStackTrace();
             return "login%error%" + e.getMessage();
+        }
+    }
+
+    public String signup(String request) {
+        System.out.println("[회원가입 시도] 입력 데이터: " + request);
+        try {
+            identityServerConnector authServiceServer = new identityServerConnector();
+            String result = authServiceServer.signup(request); // identity서버로 전달
+            return result;
+        } catch (Exception e) {
+            System.out.println("[회원가입 예외] " + e.getMessage());
+            return "signupResult%fail%error%Exception: " + e.getMessage();
         }
     }
 
@@ -76,16 +88,28 @@ public class MainController {
             e.printStackTrace();
             return null; // 실패 시 처리
         }
-        return login(tokenSet.get("refreshToken"));
+        return login(tokenSet.get("refreshToken")) + "&refreshToken$" + tokenSet.get("refreshToken") ;
     }
 
 
     public static String getAccessTokenPublicKey() {
-        TokenService tokenService = TokenService.getInstance();
-        String acPublicKeyPem = tokenService.getPublicKey();
-        // PEM 개행 문자 -> \n 으로 변환
-        return "%acpublicKey%&acKey$" + acPublicKeyPem.replace("\r", "").replace("\n", "\\n");
+        try {
+            TokenService tokenService = TokenService.getInstance();
+            String acPublicKeyPem = tokenService.getPublicKey();
+
+            // 줄바꿈을 escape 문자로 변환하여 문자열로 전송
+            String escapedPem = acPublicKeyPem.replace("\r", "").replace("\n", "\\n");
+
+            // 프로토콜에 맞는 접두사 포함
+            return "GET_ACCESS_PUBLIC_KEY%&acKey$" + escapedPem;
+
+        } catch (Exception e) {
+            System.out.println("[ERROR] Failed to retrieve access token public key");
+            e.printStackTrace();
+            return "ERROR%&acKey$null";
+        }
     }
+
 
     // 나머지 메서드들도 동일하게 필요시 new로 객체 생성해서 구현 가능
 

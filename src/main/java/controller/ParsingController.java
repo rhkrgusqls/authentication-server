@@ -27,7 +27,10 @@ public class ParsingController {
         switch (opcode) {
             case "LOGIN":
                 return controller.login(data.id[0],data.password[0]);
-
+            case "SIGNUP":
+                return controller.signup(input);
+            case "REQUESTKEY":
+                return controller.getAccessTokenPublicKey();
             default:
                 return "error%UnknownOpcode";
         }
