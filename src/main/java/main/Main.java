@@ -8,40 +8,14 @@ import console.HTTPSConnect;
 
 @SpringBootApplication
 public class Main {
-    public static void main(String[] args) throws Exception {
-        //System.out.println(ParsingController.controllerHandle("LOGIN%&id$testuser&password$1234%"));
-        //System.out.println(ParsingController.controllerHandle("SIGNUP%&id$testuser2&password$1234%"));
-        System.out.println(ParsingController.controllerHandle("REQUESTKEY%%"));
-
-        /*
-        int port = 2010; // 서버 포트
-
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1); // 클라이언트 접속 처리 스레드 그룹
-        EventLoopGroup workerGroup = new NioEventLoopGroup(); // 실제 데이터 처리 스레드 그룹
-
+    public static void main(String[] args) {
+        SpringApplication.run(Main.class, args);
         try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) throws Exception {
-                            ChannelPipeline p = ch.pipeline();
-                            p.addLast(new StringDecoder(CharsetUtil.UTF_8)); // inbound String 변환
-                            p.addLast(new StringEncoder(CharsetUtil.UTF_8)); // outbound String 변환
-                            p.addLast(new MainConsole()); // 커스텀 핸들러 등록
-                        }
-                    });
-
-            ChannelFuture f = b.bind(port).sync();
-            System.out.println("[Netty] Server started on port " + port);
-
-            // 서버 종료 대기
-            f.channel().closeFuture().sync();
-        } finally {
-            // 종료 시 리소스 해제
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-        }*/
+            HTTPSConnect server = new HTTPSConnect();
+            server.connectClient(); // Netty + SSL 서버 실행
+        } catch (Exception e) {
+            System.err.println("[Fatal][Server] 서버 시작 중 예외 발생: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
